@@ -45,7 +45,8 @@ void Raytracer::computeShading(Ray3D& ray, LightList& light_list) {
 	}
 }
 
-Color Raytracer::shadeRay(Ray3D& ray, Scene& scene, LightList& light_list) {
+//reflective : http://web.cse.ohio-state.edu/~shen.94/681/Site/Slides_files/reflection_refraction.pdf
+Color Raytracer::shadeRay(Ray3D& ray, Scene& scene, LightList& light_list, int recursionDepth = 0) {
 	Color col(0.0, 0.0, 0.0); 
 	traverseScene(scene, ray); 
 
@@ -55,9 +56,22 @@ Color Raytracer::shadeRay(Ray3D& ray, Scene& scene, LightList& light_list) {
 		computeShading(ray, light_list); 
 		col = ray.col;  
 	}
-
 	// You'll want to call shadeRay recursively (with a different ray, 
 	// of course) here to implement reflection/refraction effects.  
+
+	if (recursionDepth < MAXRECURSION) {
+		recursionDepth++;
+		
+		Ray3D reflection_ray;        
+        reflection_ray.dir =  ray.dir - 2 * (ray.dir.dot(ray.intersection.normal)) * ray.intersection.normal;
+        reflection_ray.dir.normalize();
+	    reflection_ray.origin = ray.intersection.point + 0.01*reflection_ray.dir;
+        Color reflection_ray_col = shadeRay(reflection_ray, scene, light_list, recursionDepth);
+	    // Add new color with a small scalar multiple
+	    col = col + 0.2*reflection_ray_col; 
+	}
+
+
 
 	return col; 
 }	
@@ -85,7 +99,15 @@ void Raytracer::render(Camera& camera, Scene& scene, LightList& light_list, Imag
 			
 			Ray3D ray;
 			// TODO: Convert ray to world space  
+			//Ray Direction
+			Vector3D direction = imagePlane - origin;
 			
+			//Convert to world-space
+			direction = viewToWorld * direction;
+			origin = viewToWorld * origin;
+			ray = Ray3D(origin, direction);
+			
+			//Generate colour by calling shadeRay
 			Color col = shadeRay(ray, scene, light_list); 
 			image.setColorAtPixel(i, j, col);			
 		}
