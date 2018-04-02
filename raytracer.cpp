@@ -12,8 +12,11 @@
 #include <cmath>
 #include <iostream>
 #include <cstdlib>
+#define MAXRECURSION 2
 
 void Raytracer::traverseScene(Scene& scene, Ray3D& ray)  {
+
+
 	for (size_t i = 0; i < scene.size(); ++i) {
 		SceneNode* node = scene[i];
 
@@ -35,13 +38,56 @@ void Raytracer::computeTransforms(Scene& scene) {
 	}
 }
 
-void Raytracer::computeShading(Ray3D& ray, LightList& light_list) {
+void Raytracer::computeShading(Ray3D& ray, LightList& light_list, Scene& scene) {
 	for (size_t  i = 0; i < light_list.size(); ++i) {
 		LightSource* light = light_list[i];
 		
 		// Each lightSource provides its own shading function.
 		// Implement shadows here if needed.
-		light->shade(ray);        
+
+		/********* Hard shadow **********/
+		/*
+		//• Use a ray!
+
+		 //Compute the ray from intersection to light source 
+		Point3D light_pos = light->get_position();
+		Ray3D ray_to_lightpos;
+  		ray_to_lightpos.intersection.none = true;
+	    ray_to_lightpos.dir =  light_pos - ray.intersection.point;
+	    ray_to_lightpos.dir.normalize();
+		ray_to_lightpos.origin = ray.intersection.point + 0.001 * ray_to_lightpos.dir;
+		ray_to_lightpos.onSquare = true;
+
+        double distance_to_lightpos = ray_to_lightpos.dir.length();
+
+  
+        //If a ray from our intersection point reaches the light before
+        //intersecting any other objects, then add the contribution of 
+        //the light to the color • Otherwise, the object is shadowed by an object
+        traverseScene(scene, ray_to_lightpos);
+
+        //Intersecting with an object.
+        
+        if (!ray_to_lightpos.intersection.none) {
+        	//printf("hi\n");
+        	ray.col = ray.intersection.mat->ambient;
+        	ray.col.clamp();
+        	//Making sure the object is not the light source, can I remove it..
+        	//if(ray_to_lightpos.intersection.t_value <= distance_to_lightpos) {
+        		
+        	//}
+
+        
+
+        //Reached the light source
+        } else {
+        	light->shade(ray); 
+        }*/
+        /********* Hard shadow end **********/
+
+        light->shade(ray); 
+		 
+		   
 	}
 }
 
@@ -53,23 +99,30 @@ Color Raytracer::shadeRay(Ray3D& ray, Scene& scene, LightList& light_list, int r
 	// Don't bother shading if the ray didn't hit 
 	// anything.
 	if (!ray.intersection.none) {
-		computeShading(ray, light_list); 
-		col = ray.col;  
+		computeShading(ray, light_list, scene); 
+		col = col + ray.col;
+
+
+		//!!!recursion reflection
+		if (recursionDepth < MAXRECURSION) {
+			recursionDepth++;
+			//printf("recrsion depth is %d\n",recursionDepth);
+			Ray3D reflection_ray;        
+	        reflection_ray.dir =  ray.dir - 2 * (ray.dir.dot(ray.intersection.normal) * ray.intersection.normal);
+	        reflection_ray.dir.normalize();
+		    reflection_ray.origin = ray.intersection.point + 0.001 * reflection_ray.dir;
+	        Color reflection_ray_col = shadeRay(reflection_ray, scene, light_list, recursionDepth);
+		    //Reflection coefficient is Ks
+		    col = col + ((ray.intersection.mat)->specular)*reflection_ray_col; 
+		}
+
+
 	}
 	// You'll want to call shadeRay recursively (with a different ray, 
 	// of course) here to implement reflection/refraction effects.  
 
-	if (recursionDepth < MAXRECURSION) {
-		recursionDepth++;
-		
-		Ray3D reflection_ray;        
-        reflection_ray.dir =  ray.dir - 2 * (ray.dir.dot(ray.intersection.normal)) * ray.intersection.normal;
-        reflection_ray.dir.normalize();
-	    reflection_ray.origin = ray.intersection.point + 0.01*reflection_ray.dir;
-        Color reflection_ray_col = shadeRay(reflection_ray, scene, light_list, recursionDepth);
-	    // Add new color with a small scalar multiple
-	    col = col + 0.2*reflection_ray_col; 
-	}
+	//Secondary reflection
+	
 
 
 

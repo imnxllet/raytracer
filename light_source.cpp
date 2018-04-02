@@ -68,7 +68,12 @@ void PointLight::shade(Ray3D& ray) {
 
 	//Third scene
 	ray.col = Ia + Id + Is;
-	
+	/*if(!ray.intersection.none){
+		ray.col = Ia + Id + Is;
+	}else{
+		ray.col = Ia;
+	}
+	*/
 	// Clamp to 1
 	ray.col.clamp();
 

@@ -33,7 +33,7 @@ bool UnitSquare::intersect(Ray3D& ray, const Matrix4x4& worldToModel,
 	
 	//invalid intersection
 	if (t < 0 || dir[2] == 0){
-		ray.intersection.none = true;
+		//ray.intersection.none = true;
 	    return false;
 	}
 
@@ -42,7 +42,7 @@ bool UnitSquare::intersect(Ray3D& ray, const Matrix4x4& worldToModel,
 	Vector3D normal = Vector3D(0.0,0.0,1.0);
 
 	if (ray.intersection.none || t < ray.intersection.t_value) {
-
+ 
 		if (p[0] >= -0.5 && p[0] <= 0.5 && p[1] >= -0.5 && p[1] <= 0.5) {
 
 		    ray.intersection.t_value = t;
@@ -50,6 +50,7 @@ bool UnitSquare::intersect(Ray3D& ray, const Matrix4x4& worldToModel,
 		    ray.intersection.normal = transNorm(worldToModel, normal);
 		    ray.intersection.normal.normalize();
 		    ray.intersection.none = false;
+  
 		    return true;
 		}
 	}
@@ -136,6 +137,7 @@ bool UnitSphere::intersect(Ray3D& ray, const Matrix4x4& worldToModel,
 	    ray.intersection.normal = transNorm(worldToModel, normal);
 	    ray.intersection.normal.normalize();
 	    ray.intersection.none = false;
+
 		
 		return true;
 	}

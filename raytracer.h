@@ -11,7 +11,7 @@
 #include "util.h"
 #include "scene_object.h"
 #include "light_source.h"
-#define MAXRECURSION 2
+
 
 class Raytracer {
 public:
@@ -30,7 +30,7 @@ private:
 
 	// After intersection, calculate the color of the ray by shading it
 	// with all light sources in the scene.
-	void computeShading(Ray3D& ray, LightList& light_list);
+	void computeShading(Ray3D& ray, LightList& light_list, Scene& scene);
 
 	// Precompute the modelToWorld and worldToModel transformations for each
     // object in the scene.

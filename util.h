@@ -158,10 +158,12 @@ struct Intersection {
 // Ray structure. 
 struct Ray3D {
 	Ray3D() {
-		intersection.none = true; 
+		intersection.none = true;
+		onSquare = false;  
 	}
 	Ray3D( Point3D p, Vector3D v ) : origin(p), dir(v) {
 		intersection.none = true;
+		onSquare = false;
 	}
 	// Origin and direction of the ray.
 	Point3D origin;
@@ -172,6 +174,7 @@ struct Ray3D {
 	// Current colour of the ray, should be computed by the shading
 	// function.
 	Color col;
+	bool onSquare; 
 };
 
 struct Camera {    
