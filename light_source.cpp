@@ -46,9 +46,23 @@ void PointLight::shade(Ray3D& ray) {
                       Ks * specular*specularColor, 1.0); */
 
 
-   
+    //Strip texture
+    Color red(255.0, 0.0, 0.0); 
+    Color blue(0.0, 0.0, 255.0);
+    Color Ia;
+    
+    /* Texture Mapping, textbook p 240*/
+   /* double w = 0.1;
+    if(sin(M_PI * ray.intersection.point[0] / w) > 0.0){
+    	Ia = mat->ambient * red;
+    }else{
+    	Ia = mat->ambient * blue;
+    }*/
+   /* Texture Mapping End */
+
+
     // Ambient Lighting
-	Color Ia = mat->ambient * col_ambient;
+	Ia = mat->ambient * col_ambient;
 	
 	// Diffuse Lighting
 	Color Id = lambertian * mat->diffuse * col_diffuse;

@@ -5,8 +5,10 @@ in main().
 
 The TODOs include
  - setting up the rays in world space 
+
  - implementing the intersection routines for the primitives by filling
    in the intersection field in the Ray3D structure, and
+
  - implementing the shading function, which should fill in the col
    field in the Ray3D structure (depends on the material of the
    intersected object, of course).
@@ -22,7 +24,9 @@ the following three renderings of the scene (each of which saves 2 images):
   You could do this by setting ray.col in the shading function simply 
   to ray.intersection.mat->diffuse.  It will generate the scene 
   signiture if the intersection routine is implemented correctly.
+
 2, scene with diffuse plus ambient shading
+
 3. scene with the full Phong model
 
 
