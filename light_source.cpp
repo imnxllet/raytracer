@@ -8,6 +8,8 @@
 
 #include <cmath>
 #include "light_source.h"
+#include <stdlib.h>
+#include <iostream>
 
 void PointLight::shade(Ray3D& ray) {
 	// TODO: implement this function to fill in values for ray.col 
@@ -24,6 +26,44 @@ void PointLight::shade(Ray3D& ray) {
 
     //2( 𝐿 ∙ 𝑁) 𝑁 − L
     Vector3D reflectDir = 2 * (lightDir.dot(normal)) * normal - lightDir;
+
+
+    Material *mat = ray.intersection.mat;
+   /*
+
+    //Orthonormal basis at intersection point
+	Vector3D u = reflectDir.cross(normal);
+	u.normalize();
+	Vector3D v = reflectDir.cross(u);
+	v.normalize();
+	//double roughness = 0.8;
+	// Choose uniformly sampled random direction to send the ray in
+	//double theta = 2 * M_PI * (rand()/((double)RAND_MAX + 1));
+	//double phi = 2 * M_PI * (rand()/((double)RAND_MAX + 1));
+
+	double a = rand() / ((double) RAND_MAX + 1 );
+    double b = rand() / ((double) RAND_MAX) + 1;
+   
+    double theta = acos(pow((1 - a), mat->specular_exp));
+    double phi = 2 * M_PI * b;
+	double x = sin(theta) * cos(phi);
+	double y = sin(theta) * sin(phi);
+	double z = cos(theta);
+	// Convert sample to world coordinates using the orthonormal basis
+	Vector3D w = reflectDir;
+	w.normalize();
+	reflectDir = x * u + y * v + z * w;
+
+	if(normal.dot(reflectDir) < 0.0){
+		reflectDir = -x * u - y * v + z * w;
+	}*/
+	
+
+
+	reflectDir.normalize();
+
+
+
     Vector3D viewDir = -ray.dir;
     viewDir.normalize();
 
@@ -32,7 +72,7 @@ void PointLight::shade(Ray3D& ray) {
 
 
      // Material at the intersection.
-    Material *mat = ray.intersection.mat;
+    
 
     if(lambertian > 0.0) {
        float specAngle = fmax(reflectDir.dot(viewDir), 0.0);

@@ -144,6 +144,118 @@ bool UnitSphere::intersect(Ray3D& ray, const Matrix4x4& worldToModel,
 
 	return false;
 }
+//http://woo4.me/wootracer/cylinder-intersection/
+bool UnitCylinder::intersect(Ray3D& ray, const Matrix4x4& worldToModel,
+		const Matrix4x4& modelToWorld) {
+
+
+	double t0, t1;
+	Vector3D dir = worldToModel * ray.dir;
+	Point3D origin = worldToModel * ray.origin;
+
+	//Center of the unit sphere
+	Point3D center = Point3D(0.0, 0.0, 0.0);
+
+	//Radius of the unit sphere
+	float radius = 1.0;
+	Vector3D L = origin - center; 
+
+	// a=xD2+yD2, b=2xExD+2yEyD, and c=xE2+yE2-1. 
+	float a = dir[0] * dir[0] + dir[2] * dir[2];
+
+	float b = 2 * L[0] * dir[0]+ 2 * L[2] * dir[2];
+
+	float c = L[0] * L[0]+ L[2] * L[2] - radius;
+
+	float b24ac = b * b - 4 * a * c;
+	
+	if (b24ac < 0){
+		return false;
+	}
+	
+	float sqb24ac = sqrt(b24ac);
+
+	t0 = (-b + sqb24ac) / (2 * a);
+	t1 = (-b - sqb24ac) / (2 * a);
+
+	if(t0 < 0 && t1 < 0){
+		return false;
+	}
+
+	if (t0>t1){
+		float tmp = t0;
+		t0=t1;
+		t1=tmp;
+	}
+
+	float y0 = origin[1] + t0 * dir[1];
+	float y1 = origin[1] + t1 * dir[1];
+
+	if (y0 < -1){
+		if (y1 < -1){
+			return false;
+		}else{
+			// hit the cap
+			float th = t0 + (t1-t0) * (y0+1) / (y0-y1);
+			if (th <= 0) return false;
+			if (ray.intersection.none || th < ray.intersection.t_value){
+				ray.intersection.point = (modelToWorld * (origin + th * dir));
+				ray.intersection.normal = transNorm(worldToModel,Vector3D(0.0, -1.0, 0.0));
+				ray.intersection.normal.normalize();
+				ray.intersection.t_value = th;
+
+		  	  	ray.intersection.none = false;
+				return true;
+			}else{
+				return false;
+			}
+		}
+	}else if (y0 >= -1 && y0 <= 1){
+		// hit the cylinder bit
+		if (t0<=0){
+			return false;
+		}
+		if (ray.intersection.none || t0 < ray.intersection.t_value){
+			Point3D p = origin + t0 * dir;
+	
+			//Normal at intersection point
+			Vector3D normal = p - center;
+			normal.normalize();
+			ray.intersection.point = (modelToWorld * p);
+			ray.intersection.normal = transNorm(worldToModel,normal);
+			ray.intersection.normal.normalize();
+			ray.intersection.t_value = t0;
+
+		    ray.intersection.none = false;
+			return true;
+		}else{
+			return false;
+		}
+	
+	}else if (y0>1){
+		
+		if (y1>1){
+			return false;
+		}else{
+			// hit the cap
+			float th = t0 + (t1-t0) * (y0-1) / (y0-y1);
+			if (th<=0) return false;
+			if (ray.intersection.none || th < ray.intersection.t_value){
+				ray.intersection.point = (modelToWorld * (origin + th * dir));
+				ray.intersection.normal = transNorm(worldToModel,Vector3D(0.0, 1.0, 0.0));
+				ray.intersection.normal.normalize();
+				ray.intersection.t_value = th;
+
+		  	  	ray.intersection.none = false;
+				return true;
+			}else{
+				return false;
+			}
+		}
+	}
+
+	return false;
+}
 
 void SceneNode::rotate(char axis, double angle) {
 	Matrix4x4 rotation;

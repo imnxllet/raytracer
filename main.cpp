@@ -6,6 +6,7 @@
 
 #include <cstdlib>
 #include "raytracer.h"
+#include <sys/timeb.h>
 
 int main(int argc, char* argv[])
 {
@@ -14,12 +15,21 @@ int main(int argc, char* argv[])
 	// scene and renders it from two different view points, DO NOT
 	// change this if you're just implementing part one of the 
 	// assignment.  
+	/**timer**/
+	struct timeb t;
+    ftime(&t);
+    unsigned long start_ms = t.time * 1000 + t.millitm;
+
 	Raytracer raytracer;
 	LightList light_list;
 	Scene scene;   
 
-	int width = 320;
-	int height = 240;
+	//int width = 320;
+	//int height = 240;
+	//int width = 640;
+	//int height = 480;
+	int width = 1280;
+	int height = 960;
 
 	if (argc == 3) {
 		width = atoi(argv[1]);
@@ -39,10 +49,10 @@ int main(int argc, char* argv[])
 	light_list.push_back(pLight);
 
 	/** soft shadow, multiple point lights**/
-	/*for(double w = 0.15; w < 0.9; w = w + 0.15){
-		PointLight* new_pLight = new PointLight(Point3D(w,w,5), Color(0.9,0.9,0.9));
-		light_list.push_back(new_pLight);
-	}*/
+	//for(double w = 0.15; w < 0.9; w = w + 0.15){
+	//	PointLight* new_pLight = new PointLight(Point3D(w,w,5), Color(0.9,0.9,0.9));
+	//	light_list.push_back(new_pLight);
+	//}
 	/** soft shadow ends**/
 	
 	// Add a unit square into the scene with material mat.
@@ -50,6 +60,18 @@ int main(int argc, char* argv[])
 	scene.push_back(sphere);
 	SceneNode* plane = new SceneNode(new UnitSquare(), &jade);
 	scene.push_back(plane);
+
+	/*Handle cylinder*/
+	SceneNode* cylinder = new SceneNode(new UnitCylinder(), &gold);
+	scene.push_back(cylinder);
+
+	double factor3[3] = { 0.5, 0.5, 0.5};
+	cylinder->translate(Vector3D(2, 2, -5));
+	cylinder->rotate('x', -45);
+	cylinder->rotate('z', 45);
+	cylinder->scale(Point3D(0, 0, 0), factor3);
+
+	/* Handle cylinder ends.*/
 
 	// Apply some transformations to the sphere and unit square.
 	double factor1[3] = { 1.0, 2.0, 1.0 };
@@ -84,6 +106,12 @@ int main(int argc, char* argv[])
 	for (size_t i = 0; i < light_list.size(); ++i) {
 		delete light_list[i];
 	}
+
+	// stop timer
+    ftime(&t);
+    unsigned long stop_ms = t.time * 1000 + t.millitm;
+
+    printf("Time used to create two images: %lums.\n\n", stop_ms - start_ms);
 
 	return 0;
 }

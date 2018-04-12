@@ -1,0 +1,136 @@
+— your overall submission
+
+bmp files:
+
+Part 1)
+sig1.bmp
+sig2.bmp
+diffuse1.bmp
+diffuse2.bmp
+phong1.bmp
+phong2.bmp
+
+part 2)
+@Required:
+
+reflection1.bmp
+reflection2.bmp
+
+hardshadow1.bmp
+hardshadow2.bmp
+
+@Optional:
+
+anti_aliasing1.bmp
+anti_aliasing2.bmp
+
+cylinder1.bmp
+cylinder2.bmp
+
+glossy1.bmp
+glossy2.bmp
+
+soft_shadow1.bmp
+soft_shadow2.bmp
+
+texture_mapping1.bmp
+texture_mapping2.bmp
+
+
+
+— the code, and the file structure of the submission,what you have implemented and what external resources you have used,
+
+Extra function implemented for part 2)
+
+@Anti-aliasing.
+File:raytracer.cpp
+Function: void Raytracer::render
+Reference: Textbook
+Method: super sampling, devide each pixel to smaller-sized grids and sample each grid colour.
+typical code fragments: 
+				double grid_size = 5.0;
+				for (int p = 0; p < grid_size; p++) {
+					for (int q = 0;q < grid_size; q++) {
+				
+
+						Point3D origin(0, 0, 0);
+						Point3D imagePlane;
+						imagePlane[0] = (-double(image.width)/2 + (p+ 0.5)/grid_size + j)/factor;
+						imagePlane[1] = (-double(image.height)/2 + (q+ 0.5)/grid_size + i)/factor;
+
+@glossy reflection
+File:raytracer.cpp
+Function: Color Raytracer::shadeRay
+Reference: Tutorial slides
+Method: 
+1. Construct an orthonormal basis at intersection point.
+2. Sample from a hemisphere, constrained depending
+on “glossiness/roughness”
+3. Move sample to the world coordinates using the
+orthonormal basis.
+typical code fragments: 
+					double a = rand() / ((double) RAND_MAX + 1);
+				    double b = rand() / ((double) RAND_MAX + 1);
+				   
+				    double theta = acos(pow((1 - a), mat->specular_exp));
+				    double phi = 2 * M_PI * b;
+					double x = sin(theta) * cos(phi);
+					double y = sin(theta) * sin(phi);
+					double z = cos(theta);
+					// Convert sample to world coordinates using the orthonormal basis
+					Vector3D w = reflection_ray.dir;
+					//w.normalize();
+					reflection_ray.dir = x * u + y * v + z * w;
+
+
+
+@Extended light sources, in order to to produce soft shadows.
+File:raytracer.cpp
+Function: void Raytracer::computeShading(
+Reference: Tutorial slides
+Method: 
+add more light source and computer the average color of each pixel
+typical code fragments: 
+	ray.col = (1.0 / 6.0) * col;
+
+@Texture-mapping of a plane, sphere and cube (an interesting procedural texture is also acceptable).
+File:light_source.cpp
+Function: void PointLight::shade
+Reference: textbook p240
+Method: colour the reflection point according to its position
+code:
+
+	 //Strip texture
+    Color red(255.0, 0.0, 0.0); 
+    Color blue(0.0, 0.0, 255.0);
+    Color Ia;
+    
+
+    double w = 0.1;
+    if(sin(M_PI * ray.intersection.point[0] / w) > 0.0){
+    	Ia = mat->ambient * red;
+    }else{
+    	Ia = mat->ambient * blue;
+    }
+
+
+
+@Handling a non-trivial compound object, containing quadratic surfaces (e.g., a cone or cylinder).
+Spheres, ellipses, planes and patches thereof don’t count.
+File:scene_object.cpp
+Function: UnitCylinder::intersect
+Reference: http://woo4.me/wootracer/cylinder-intersection/
+Method: 
+Solve for the intersection point
+Decide the where the ray hit the cylinder by checking the y coordinate.
+
+@use multi threading provided in tutorial slides
+In your source code:
+#pragma omp parallel for
+for (int i = 0; i < _scrHeight; i++) {
+for (int j = 0; j < _scrWidth; j++) {
+
+
+
+
+

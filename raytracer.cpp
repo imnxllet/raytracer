@@ -12,7 +12,8 @@
 #include <cmath>
 #include <iostream>
 #include <cstdlib>
-#define MAXRECURSION 1
+#define MAXRECURSION 2
+
 
 void Raytracer::traverseScene(Scene& scene, Ray3D& ray)  {
 
@@ -133,6 +134,8 @@ void Raytracer::computeShading(Ray3D& ray, LightList& light_list, Scene& scene) 
 	//soft shadow, following line
 	ray.col = (1.0 / 6.0) * col;*/
 	/**Soft shadow code end https://bb-2018-01.teach.cs.toronto.edu/uploads/default/original/1X/fb3f9d81bc27c36e676c5eb693f4c384b76529f2.pdf*/
+		
+		//comment the following line to use softshadow or hardshadow.
 		light->shade(ray); 
 	}
 
@@ -149,34 +152,79 @@ Color Raytracer::shadeRay(Ray3D& ray, Scene& scene, LightList& light_list, int r
 		computeShading(ray, light_list, scene); 
 		col = col + ray.col;
 
+		bool reflection = false;
+		bool glossy = false;
 
-		//!!!recursion reflection
-	
-	/*	if (recursionDepth < MAXRECURSION) {
-			recursionDepth++;
-			//printf("recrsion depth is %d\n",recursionDepth);
-			Ray3D reflection_ray;        
-	        reflection_ray.dir =  ray.dir - 2 * (ray.dir.dot(ray.intersection.normal) * ray.intersection.normal);
-	        reflection_ray.dir.normalize();
-		    reflection_ray.origin = ray.intersection.point + 0.00001 * reflection_ray.dir;
-	        Color reflection_ray_col = shadeRay(reflection_ray, scene, light_list, recursionDepth);
-		    //Reflection coefficient is Ks
-		    col = col + ((ray.intersection.mat)->specular)*reflection_ray_col; 
-		    col.clamp();
-		}*/
+		// You'll want to call shadeRay recursively (with a different ray, 
+		// of course) here to implement reflection/refraction effects.  
 
-		//col = ray.col;
+		//!!!recursion   
+		if(reflection){
+			if (recursionDepth < MAXRECURSION) {
+				if(!glossy){
+					recursionDepth++;
+					//printf("recrsion depth is %d\n",recursionDepth);
+					Ray3D reflection_ray;        
+			        reflection_ray.dir =  ray.dir - 2 * (ray.dir.dot(ray.intersection.normal) * ray.intersection.normal);
+			        reflection_ray.dir.normalize();
+				    reflection_ray.origin = ray.intersection.point + 0.01 * reflection_ray.dir;
+			        Color reflection_ray_col = shadeRay(reflection_ray, scene, light_list, recursionDepth);
+				    col = col + ((ray.intersection.mat)->specular)*reflection_ray_col; 
+				    col.clamp();
+				
+				//glossy reflection
+				}else{
+					recursionDepth++;
+					Vector3D normal = ray.intersection.normal;
+					Material *mat = ray.intersection.mat;
+					//printf("recrsion depth is %d\n",recursionDepth);
+					Ray3D reflection_ray;        
+			        reflection_ray.dir =  ray.dir - 2 * (ray.dir.dot(ray.intersection.normal) * ray.intersection.normal);
+			        
+			        //Orthonormal basis at intersection point
+					Vector3D u = reflection_ray.dir.cross(normal);
+					u.normalize();
+					Vector3D v = reflection_ray.dir.cross(u);
+					v.normalize();
+					//double roughness = 0.8;
+					// Choose uniformly sampled random direction to send the ray in
+					//double theta = 2 * M_PI * (rand()/((double)RAND_MAX + 1));
+					//double phi = 2 * M_PI * (rand()/((double)RAND_MAX + 1));
 
+					double a = rand() / ((double) RAND_MAX + 1);
+				    double b = rand() / ((double) RAND_MAX + 1);
+				   
+				    double theta = acos(pow((1 - a), mat->specular_exp));
+				    double phi = 2 * M_PI * b;
+					double x = sin(theta) * cos(phi);
+					double y = sin(theta) * sin(phi);
+					double z = cos(theta);
+					// Convert sample to world coordinates using the orthonormal basis
+					Vector3D w = reflection_ray.dir;
+					//w.normalize();
+					reflection_ray.dir = x * u + y * v + z * w;
+
+			        reflection_ray.dir.normalize();
+				    reflection_ray.origin = ray.intersection.point + 0.01 * reflection_ray.dir;
+			        Color reflection_ray_col = shadeRay(reflection_ray, scene, light_list, recursionDepth);
+				    //Reflection coefficient is Ks
+			
+
+				    col = col + ((ray.intersection.mat)->specular)*reflection_ray_col; 
+				    col.clamp();
+
+				}
+
+			}
+
+		}
 
 	}
-	// You'll want to call shadeRay recursively (with a different ray, 
-	// of course) here to implement reflection/refraction effects.  
 
-	//Secondary reflection
 	
 
 
-
+	col.clamp();
 	return col; 
 }	
 
@@ -188,12 +236,16 @@ void Raytracer::render(Camera& camera, Scene& scene, LightList& light_list, Imag
 
 	viewToWorld = camera.initInvViewMatrix();
 	
-	bool anti_aliasing = false;
-//	bool anti_aliasing = true;
+	//bool anti_aliasing = false;
+	bool anti_aliasing = true;
+
 	
 	// Construct a ray for each pixel.
+	#pragma omp parallel for
 	for (int i = 0; i < image.height; i++) {
 		for (int j = 0; j < image.width; j++) {
+	//for (int i = 0; i < image.height; i++) {
+		//for (int j = 0; j < image.width; j++) {
 			// Sets up ray origin and direction in view space, 
 			// image plane is at z = -1.
 			Color col;
